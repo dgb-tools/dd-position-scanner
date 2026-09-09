@@ -8,14 +8,14 @@ function varint(b, i) { const v = b[i]; if (v < 0xfd) return [v, i + 1]; if (v =
 /** Parse one tx at offset; returns { start, end, nonWitness, vin, vout:[{value, script, scriptOffset(in nonWitness)}] } */
 export function readTx(b, start) {
   let i = start; const version = b.subarray(i, i + 4); i += 4; let segwit = false; if (b[i] === 0 && b[i + 1] === 1) { segwit = true; i += 2; }
-  const parts = [version]; const inStart = i; let nin; [nin, i] = varint(b, i);
-  for (let k = 0; k < nin; k++) { i += 36; let sl; [sl, i] = varint(b, i); i += sl + 4; }
-  let nout; [nout, i] = varint(b, i); const vout = []; const outStart = i;
+  const parts = [version]; const inStart = i; let nin; [nin, i] = varint(b, i); const vin = [];
+  for (let k = 0; k < nin; k++) { const txid = Buffer.from(b.subarray(i, i + 32)).reverse().toString("hex"); const vout = b.readUInt32LE(i + 32); i += 36; let sl; [sl, i] = varint(b, i); const scriptSig = Buffer.from(b.subarray(i, i + sl)); i += sl; const sequence = b.readUInt32LE(i); i += 4; vin.push({ txid, vout, scriptSig: scriptSig.toString("hex"), sequence, witness: [] }); }
+  let nout; [nout, i] = varint(b, i); const vout = [];
   for (let k = 0; k < nout; k++) { const value = Number(b.readBigUInt64LE(i)); i += 8; let sl, so; [sl, so] = varint(b, i); vout.push({ value, script: Buffer.from(b.subarray(so, so + sl)), scriptOffset: so - inStart + 4 }); i = so + sl; }
   const coreEnd = i; parts.push(b.subarray(inStart, coreEnd));
-  if (segwit) for (let k = 0; k < nin; k++) { let nw; [nw, i] = varint(b, i); for (let w = 0; w < nw; w++) { let wl; [wl, i] = varint(b, i); i += wl; } }
+  if (segwit) for (let k = 0; k < nin; k++) { let nw; [nw, i] = varint(b, i); for (let w = 0; w < nw; w++) { let wl; [wl, i] = varint(b, i); vin[k].witness.push(Buffer.from(b.subarray(i, i + wl)).toString("hex")); i += wl; } }
   const locktime = b.subarray(i, i + 4); i += 4; parts.push(locktime);
-  const nonWitness = Buffer.concat(parts); return { start, end: i, nonWitness, txid: Buffer.from(sha256d(nonWitness)).reverse().toString("hex"), vout, segwit };
+  const nonWitness = Buffer.concat(parts); return { start, end: i, nonWitness, txid: Buffer.from(sha256d(nonWitness)).reverse().toString("hex"), vin, vout, segwit };
 }
 export function readBlockTxs(blockBuf) { const b = Buffer.from(blockBuf); const header = b.subarray(0, 80); let [n, i] = varint(b, 80); const txs = []; for (let k = 0; k < n; k++) { const t = readTx(b, i); txs.push(t); i = t.end; } return { header, merkleRoot: Buffer.from(header.subarray(36, 68)).reverse().toString("hex"), txs }; }
 /** Merkle path for txid index k as OTS ops on the little-endian txid bytes; returns { ops, root } (root as displayed hex). Bitcoin rule: odd level duplicates the last hash. */

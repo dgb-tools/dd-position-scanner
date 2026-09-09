@@ -7,7 +7,8 @@ import { readBlockTxs } from "./chain.js"; import { parseDDOpReturn } from "dgb-
 const DIRS = (process.env.RAW_DIRS || "data/raw-backfill,data/raw").split(","); const OUT = process.env.OUT || "data/dd-txs.jsonl";
 function scriptType(s) { if (s.length === 34 && s[0] === 0x51 && s[1] === 0x20) return "v1_p2tr"; if (s.length === 22 && s[0] === 0x00 && s[1] === 0x14) return "v0_p2wpkh"; if (s.length === 34 && s[0] === 0x00 && s[1] === 0x20) return "v0_p2wsh"; if (s[0] === 0x6a) return "op_return"; if (s.length === 25 && s[0] === 0x76) return "p2pkh"; if (s.length === 23 && s[0] === 0xa9) return "p2sh"; return "other"; }
 // inputs: need prevout txid/vout → re-read from the raw tx bytes (readTx skipped them); minimal input parser
-function inputs(nonWitness) { let i = 4; let n = nonWitness[i]; i += 1; const out = []; for (let k = 0; k < n; k++) { const txid = Buffer.from(nonWitness.subarray(i, i + 32)).reverse().toString("hex"); const vout = nonWitness.readUInt32LE(i + 32); i += 36; let sl = nonWitness[i]; i += 1; i += sl + 4; out.push({ txid, vout }); } return out; }
+function inputs_unused(nonWitness) { let i = 4; let n = nonWitness[i]; i += 1; const out = []; for (let k = 0; k < n; k++) { const txid = Buffer.from(nonWitness.subarray(i, i + 32)).reverse().toString("hex"); const vout = nonWitness.readUInt32LE(i + 32); i += 36; let sl = nonWitness[i]; i += 1; i += sl + 4; out.push({ txid, vout }); } return out; }
+const SPENDS_OF = process.env.SPENDS_OF ? new Set(fs.readFileSync(process.env.SPENDS_OF, "utf8").trim().split("\n").filter(Boolean).map((l) => JSON.parse(l)).map((r) => r.collateral_outpoint).filter(Boolean)) : null;
 const idx = []; for (const d of DIRS) if (fs.existsSync(d)) for (const f of fs.readdirSync(d)) if (f.endsWith(".idx.jsonl")) for (const l of fs.readFileSync(path.join(d, f), "utf8").trim().split("\n")) if (l) { const r = JSON.parse(l); idx.push({ ...r, bin: path.join(d, f.replace(".idx.jsonl", ".bin")) }); }
 idx.sort((a, b) => a.h - b.h); let seen = -1, blocks = 0, ddTx = 0; const fds = new Map(); const out = fs.openSync(OUT, "w"); const heights = [];
 for (const e of idx) { if (e.h === seen) continue; seen = e.h; const fd = fds.get(e.bin) ?? (fds.set(e.bin, fs.openSync(e.bin, "r")), fds.get(e.bin)); const buf = Buffer.alloc(e.n); fs.readSync(fd, buf, 0, e.n, e.o);
@@ -22,8 +23,9 @@ for (const e of idx) { if (e.h === seen) continue; seen = e.h; const fd = fds.ge
       try { parsed = parseDDOpReturn(s); } catch (err) { parsed = { error: err.message }; }
       break;
     }
-    if (!recScript) return;
-    const row = { height: e.h, txid: tx.txid, index: ti, record_hex: recScript.toString("hex"), record: parsed, vin: inputs(tx.nonWitness),
+    const spends = SPENDS_OF ? tx.vin.filter((v) => SPENDS_OF.has(v.txid + ":" + v.vout)).map((v) => v.txid + ":" + v.vout) : [];
+    if (!recScript && spends.length === 0) return;
+    const row = { height: e.h, txid: tx.txid, index: ti, record_hex: recScript ? recScript.toString("hex") : null, record: parsed, spends_collateral: spends, vin: tx.vin.map((v) => ({ txid: v.txid, vout: v.vout, witness: v.witness })),
       vout: tx.vout.map((o, n) => ({ n, value: o.value, type: scriptType(o.script), script: scriptType(o.script) === "v1_p2tr" ? o.script.toString("hex") : undefined })) };
     fs.writeSync(out, JSON.stringify(row) + "\n"); ddTx++;
   });
