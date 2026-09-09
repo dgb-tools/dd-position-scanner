@@ -1,0 +1,4 @@
+{ "name": "dd-position-scanner", "version": "0.0.1", "private": true, "type": "module", "license": "MIT", "engines": { "node": ">=20" },
+  "description": "DigiDollar position scanner: every DD record on mainnet → private position rows, public aggregates. Extends dgb-digidollar-codec.",
+  "scripts": { "extract": "node src/extract.js", "test": "node --test test/" },
+  "dependencies": { "dgb-digidollar-codec": "github:dgb-tools/dgb-digidollar-codec#main" } }

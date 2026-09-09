@@ -1,0 +1,10 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://dgbinsights.com/vaults/schema.json", "title": "DigiDollar position (private row) and public aggregate shapes", "version": "0.1.0",
+  "$defs": {
+    "position_private": { "type": "object", "required": ["mint_txid", "mint_height", "tier", "lock_height", "cents", "collateral_outpoint", "status"],
+      "properties": { "mint_txid": {"type": "string"}, "mint_height": {"type": "integer"}, "tier": {"type": "integer"}, "lock_height": {"type": "integer"}, "cents": {"type": "integer"},
+        "collateral_outpoint": {"type": ["string", "null"], "description": "txid:vout; null when collateral_ambiguous"}, "collateral_sats": {"type": ["integer", "null"]}, "collateral_ambiguous": {"type": "boolean"},
+        "status": {"enum": ["locked", "chain-matured-unspent", "closed"]}, "closed_by_txid": {"type": ["string", "null"]}, "closed_height": {"type": ["integer", "null"]}, "close_kind": {"enum": ["type-3", "no-record", "over-mint", null]}, "burn_event_id": {"type": ["string", "null"], "description": "txid of the burn event; burn cents live on the event, never on the position"} } },
+    "burn_event": { "type": "object", "required": ["txid", "height", "consumed_cents", "change_cents", "burn_cents", "mechanism", "positions_closed", "extra_burn_cents"],
+      "properties": { "mechanism": {"enum": ["type-3", "no-record"]}, "extra_burn_cents": {"type": "integer", "description": "burn − Σ mint cents of positions closed in this tx (over-mint when > 0)"} } },
+    "aggregate_month_tier": { "type": "object", "required": ["month", "tier", "positions", "cents", "collateral_sats"] },
+    "matured_unredeemed": { "type": "object", "required": ["as_of_height", "positions", "cents", "collateral_sats", "age_buckets"], "properties": { "age_buckets": {"type": "object", "properties": {"0-7d": {}, "8-30d": {}, "31-90d": {}, "90d+": {}}} } } } }
