@@ -1,0 +1,30 @@
+{
+ "snapshot_id": "mainnet-24182922-f21e60c7",
+ "network": "digibyte-mainnet",
+ "status": "preview",
+ "label": "explorer-derived; node-cross-checked for heights (none yet)",
+ "snapshot_end_height": 24182922,
+ "snapshot_end_hash": "f21e60c7b943e394e35f3bf1bae5f7f33ead99e440b7dde05b6def45e0900200",
+ "snapshot_end_time": 1788986227,
+ "walk_tip_height": 24183642,
+ "settle_blocks": 720,
+ "source": "https://digiexplorer.info/api (raw blocks, persisted by oracle-ledger walker)",
+ "dd_transactions": 1217,
+ "burn_events": 289,
+ "collateral_ambiguous_mints": 0,
+ "invariants": {
+  "record_errors": 0,
+  "dd_input_unvalued": 0,
+  "transfer_not_conserved": 0
+ },
+ "exact_gate": null,
+ "schema_version": "0.1.0",
+ "generated_at": "2026-09-10T01:24:56.573Z",
+ "files": [
+  "month-tier.json",
+  "matured-unredeemed.json",
+  "flows.json",
+  "totals.json"
+ ],
+ "public_surface": "month×tier, matured-unredeemed totals + age buckets, daily flows, status totals — no per-height ladder, no per-position rows"
+}

@@ -1,0 +1,18 @@
+{
+ "snapshot_id": "mainnet-24182922-f21e60c7",
+ "status": "preview",
+ "end_height": 24182922,
+ "end_hash": "f21e60c7b943e394e35f3bf1bae5f7f33ead99e440b7dde05b6def45e0900200",
+ "totals": {
+  "positions_total": 633,
+  "locked": 311,
+  "chain_matured_unspent": 33,
+  "closed": 289,
+  "collateral_ambiguous_mints": 0,
+  "outstanding_supply_cents": 10071688,
+  "unspent_collateral_sats": 7954776968275612,
+  "burned_cents": 14871596,
+  "over_mint_events": 0
+ },
+ "generated_at": "2026-09-10T01:24:56.573Z"
+}
