@@ -23,4 +23,4 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta n
 fs.mkdirSync(path.join(out, "vaults", "snapshots", m.snapshot_id), { recursive: true }); fs.writeFileSync(path.join(out, "vaults", "index.html"), html);
 for (const f of fs.readdirSync(dir)) fs.copyFileSync(path.join(dir, f), path.join(out, "vaults", "snapshots", m.snapshot_id, f));
 fs.writeFileSync(path.join(out, "vaults", "latest.json"), JSON.stringify({ snapshot_id: m.snapshot_id, status: m.status, end_height: m.snapshot_end_height, end_hash: m.snapshot_end_hash, totals: tot, matured_unredeemed: { positions: mu.positions, cents: mu.cents, collateral_sats: mu.collateral_sats }, generated_at: m.generated_at }, null, 1));
-fs.copyFileSync("schema/position.schema.json", path.join(out, "vaults", "schema.json")); console.error("rendered", path.join(out, "vaults"));
+fs.copyFileSync(new URL("../schema/position.schema.json", import.meta.url), path.join(out, "vaults", "schema.json")); console.error("rendered", path.join(out, "vaults"));
